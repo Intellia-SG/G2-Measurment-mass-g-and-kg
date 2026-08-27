@@ -1,66 +1,130 @@
 // src/components/IntroScreen.jsx
 import React from 'react';
-import { motion } from 'framer-motion';
-import Button from './Button.jsx';
+import './IntroScreen.css';
+import { generateSessionQuestions } from '../utils/shuffle.js';
+import questionBank from '../data/questionBank.js';
 
-const PHASES = [
-  { icon:'⚖️', label:'Wonder',   desc:'A mass mystery!' },
-  { icon:'📖', label:'Story',    desc:'Meet the team' },
-  { icon:'🧪', label:'Simulate', desc:'Balance scales' },
-  { icon:'🎮', label:'Play',     desc:'100 challenges' },
-  { icon:'📓', label:'Reflect',  desc:'Quiz & review' },
+const JOURNEY = [
+  { num: '01', icon: '🔍', label: 'Wonder',   desc: 'Spark your curiosity' },
+  { num: '02', icon: '📖', label: 'Story',    desc: 'Sophie & Max\'s market' },
+  { num: '03', icon: '🧪', label: 'Simulate', desc: '4 interactive mass labs' },
+  { num: '04', icon: '🎮', label: 'Practice', desc: '10 worlds & bosses' },
+  { num: '05', icon: '📓', label: 'Reflect',  desc: 'Review & scorecard' },
 ];
 
-const FEATURES = [
-  { icon:'🎯', label:'100 Questions' },
-  { icon:'⚖️', label:'g and kg' },
-  { icon:'🏆', label:'Badges & XP' },
-];
+export default function IntroScreen({ state, dispatch }) {
+  const hasSaved = state?.phaseComplete && Object.values(state.phaseComplete).some(Boolean);
 
-export default function IntroScreen({ onBegin }) {
+  function startFresh() {
+    dispatch({ type: 'LOAD_QUESTIONS', payload: generateSessionQuestions(questionBank) });
+    dispatch({ type: 'SET_PHASE', payload: 'wonder' });
+  }
+
+  function resumeSession() {
+    dispatch({ type: 'SET_PHASE', payload: state.savedPhase || 'wonder' });
+  }
+
   return (
-    <div className="intro-screen">
-      <motion.div className="intro-badge"
-        initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }}>
-        ✨ Intellia Global · Grade 2 Maths
-      </motion.div>
+    <div className="intro-wrap">
+      {/* Top Badge */}
+      <div className="intro-top-badge">
+        ✨ Curriculum · Measurement: Mass in Grams &amp; Kilograms Grade 2–5
+      </div>
 
-      <motion.h1 className="intro-title"
-        initial={{ opacity:0, scale:0.9 }} animate={{ opacity:1, scale:1 }}
-        transition={{ delay:0.08, type:'spring', stiffness:200, damping:16 }}>
-        <span className="title-main">MassQuest</span>
-        <span className="title-sub">Measurement: g and kg</span>
-      </motion.h1>
+      {/* Main Title */}
+      <h1 className="intro-title">
+        <span className="text-orange">Mass</span> <span className="text-white">Quest</span>
+      </h1>
+      <h2 className="intro-subtitle">MassQuest · Master Balance Scales, Grams, Kilograms &amp; Conversions</h2>
 
-      {/* Mascot teaser */}
-      <motion.div className="mascot-container"
-        initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.18 }}>
-        <span className="mascot" role="img" aria-label="Weighty">🧲</span>
-        <div className="speech-bubble">Let's explore grams and kilograms! ⚖️</div>
-      </motion.div>
+      {/* Mascot Row */}
+      <div className="intro-mascot-row">
+        <div className="intro-mascot-circle">🧲</div>
+        <div className="intro-speech-bubble">
+          Hi! I'm Weighty. Ready to explore balance scales,<br />measure grams and kilograms, and conquer mass puzzles? ⚖️📦
+        </div>
+      </div>
 
-      {/* Journey map */}
-      <motion.div className="intro-journey-map"
-        initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.28 }}>
-        {PHASES.map((step, i) => (
-          <motion.div key={step.label} className="intro-journey-step glass-card"
-            initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }}
-            transition={{ delay: 0.32 + i * 0.06 }}>
-            <span className="step-icon" role="img" aria-hidden="true">{step.icon}</span>
-            <div className="step-label">{step.label}</div>
-            <div className="step-desc">{step.desc}</div>
-          </motion.div>
-        ))}
-      </motion.div>
+      {/* Description */}
+      <p className="intro-desc">
+        Learn how to compare weights on balance scales, measure small items in grams (g), heavy sacks in kilograms (kg), read dials, and convert with the 1 kg = 1000 g superpower!
+      </p>
 
-      <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.55 }}>
-        <Button variant="primary" size="lg" onClick={onBegin}>🚀 Begin Your Journey!</Button>
-      </motion.div>
+      {/* Journey Card */}
+      <div className="journey-card">
+        <div className="journey-card-title">YOUR LEARNING JOURNEY · CLICK ANY PHASE TO START</div>
 
-      <div className="intro-feature-cards">
-        {FEATURES.map(f => (
-          <div key={f.label} className="intro-feature-card glass-card">{f.icon} {f.label}</div>
-        ))}
+        <div className="journey-steps-container">
+          <div className="journey-row top-row">
+            {JOURNEY.slice(0, 3).map((j, i) => (
+              <React.Fragment key={j.num}>
+                <div
+                  className="journey-step-item clickable-step"
+                  onClick={() => dispatch({ type: 'SET_PHASE', payload: j.label.toLowerCase() === 'practice' ? 'play' : j.label.toLowerCase() })}
+                  role="button"
+                  tabIndex={0}
+                  title={`Click to open ${j.label} phase`}
+                >
+                  <span className="journey-icon-circle">{j.icon}</span>
+                  <div className="journey-text-col">
+                    <span className="journey-item-title">{j.label}</span>
+                    <span className="journey-item-desc">{j.desc}</span>
+                  </div>
+                </div>
+                <span className={`journey-arrow ${i === 2 ? 'fade-arrow' : ''}`}>→</span>
+              </React.Fragment>
+            ))}
+          </div>
+
+          <div className="journey-row bottom-row">
+            {JOURNEY.slice(3, 5).map((j, i) => (
+              <React.Fragment key={j.num}>
+                <div
+                  className="journey-step-item clickable-step"
+                  onClick={() => dispatch({ type: 'SET_PHASE', payload: j.label.toLowerCase() === 'practice' ? 'play' : j.label.toLowerCase() })}
+                  role="button"
+                  tabIndex={0}
+                  title={`Click to open ${j.label} phase`}
+                >
+                  <span className="journey-icon-circle">{j.icon}</span>
+                  <div className="journey-text-col">
+                    <span className="journey-item-title">{j.label}</span>
+                    <span className="journey-item-desc">{j.desc}</span>
+                  </div>
+                </div>
+                {i === 0 && <span className="journey-arrow">→</span>}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="intro-ctas">
+        <button className="btn btn-primary btn-lg intro-cta-main" onClick={startFresh}>
+          🚀 Begin Your Journey!
+        </button>
+        {hasSaved && (
+          <button className="btn btn-outline" onClick={resumeSession} style={{ marginTop: '10px' }}>
+            ↩ Resume Session
+          </button>
+        )}
+      </div>
+
+      {/* Bottom Cards */}
+      <div className="intro-bottom-cards">
+        <div className="bottom-card">
+          <div className="bottom-card-icon" style={{ color: '#ff6b6b' }}>🎯</div>
+          <div>100 Questions</div>
+        </div>
+        <div className="bottom-card">
+          <div className="bottom-card-icon" style={{ color: '#feca57' }}>⚖️</div>
+          <div>Grams &amp; Kilograms</div>
+        </div>
+        <div className="bottom-card">
+          <div className="bottom-card-icon" style={{ color: '#66bb6a' }}>✨</div>
+          <div>Badges &amp; XP</div>
+        </div>
       </div>
     </div>
   );

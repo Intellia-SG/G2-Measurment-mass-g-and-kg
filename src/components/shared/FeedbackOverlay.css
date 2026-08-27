@@ -1,0 +1,70 @@
+/* src/components/shared/FeedbackOverlay.css */
+.feedback-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 8, 30, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.feedback-overlay-card {
+  width: 100%;
+  max-width: 480px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  box-sizing: border-box;
+}
+
+.feedback-overlay-card.is-correct {
+  border-color: rgba(34, 197, 94, 0.45);
+  box-shadow: 0 0 35px rgba(34, 197, 94, 0.35);
+}
+
+.feedback-overlay-card.is-incorrect {
+  border-color: rgba(239, 68, 68, 0.45);
+  box-shadow: 0 0 35px rgba(239, 68, 68, 0.35);
+}
+
+.feedback-icon-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+}
+
+.feedback-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.4rem;
+  color: #ffffff;
+  margin: 0;
+}
+
+.feedback-explanation {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+  font-weight: 600;
+}
+
+.feedback-continue-btn {
+  margin-top: 6px;
+  width: 100%;
+  max-width: 260px;
+}

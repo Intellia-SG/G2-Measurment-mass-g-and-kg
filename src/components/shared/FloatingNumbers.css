@@ -1,0 +1,17 @@
+/* src/components/shared/FloatingNumbers.css */
+.floating-symbols-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  user-select: none;
+}
+
+.floating-symbol-item {
+  position: absolute;
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: #ffffff;
+  animation: floatAround linear infinite alternate;
+}

@@ -1,0 +1,214 @@
+/* src/components/phases/WonderPhase.css */
+.wonder-wrap {
+  flex: 1;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(6px, 1.2vh, 14px) clamp(10px, 2vw, 24px);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.wonder-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.wonder-particle {
+  position: absolute;
+  animation: wonderFloat 5s ease-in-out infinite alternate;
+  opacity: 0.28;
+  user-select: none;
+}
+
+.wonder-container {
+  width: 100%;
+  max-width: min(1080px, 94vw);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+/* ─── 2-Column Wide Glass Card ──────────────────────────────────────────── */
+.wonder-card {
+  width: 100%;
+  max-height: calc(100vh - 84px);
+  padding: clamp(14px, 2.2vh, 24px) clamp(16px, 2.5vw, 32px);
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: clamp(12px, 2.2vw, 28px);
+  align-items: center;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ─── Left Column: Hero & Mascot ────────────────────────────────────────── */
+.wonder-col-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: clamp(6px, 1.2vh, 12px);
+  min-width: 0;
+}
+
+.wonder-badge-pill {
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: var(--radius-pill);
+  padding: 3px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #fbbf24;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(0.75rem, 0.9vw, 0.85rem);
+  letter-spacing: 0.5px;
+}
+
+.wonder-hero-icon-wrap {
+  width: clamp(64px, 8vh, 88px);
+  height: clamp(64px, 8vh, 88px);
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.18);
+  border: 2px solid rgba(245, 158, 11, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 28px rgba(245, 158, 11, 0.35);
+  animation: pulseGlow 2.5s infinite;
+}
+
+.wonder-stadium-icon {
+  font-size: clamp(2.4rem, 4.5vh, 3.4rem);
+  line-height: 1;
+}
+
+.wonder-title {
+  color: var(--gold);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 2.3vw, 2.1rem);
+  font-weight: 900;
+  line-height: 1.2;
+  text-shadow: 0 0 20px rgba(255, 179, 0, 0.35);
+}
+
+.wonder-mascot-row {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* ─── Right Column: Clues & Action ──────────────────────────────────────── */
+.wonder-col-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(8px, 1.4vh, 14px);
+  min-width: 0;
+}
+
+.wonder-number-display {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 179, 0, 0.35);
+  border-radius: 14px;
+  padding: clamp(6px, 1vh, 10px) clamp(10px, 1.4vw, 16px);
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.wonder-formula-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.wonder-num {
+  color: #ffd54f;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(0.95rem, 1.25vw, 1.25rem);
+  line-height: 1.35;
+  display: block;
+}
+
+.wonder-question-card {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  padding: clamp(8px, 1.4vh, 14px) clamp(10px, 1.5vw, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
+}
+
+.wonder-q {
+  font-family: var(--font-body);
+  font-size: clamp(0.92rem, 1.1vw, 1.05rem);
+  color: var(--text-primary);
+  font-weight: 700;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.wonder-em {
+  color: var(--gold-light);
+}
+
+.wonder-highlight {
+  color: #4ade80;
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-color: rgba(74, 222, 128, 0.5);
+}
+
+.wonder-cta {
+  font-size: clamp(1.05rem, 1.3vw, 1.25rem);
+  padding: clamp(10px, 1.5vh, 14px) clamp(20px, 2vw, 32px);
+  width: 100%;
+}
+
+/* ─── Responsive for Tablet & Mobile ────────────────────────────────────── */
+@media (max-width: 768px) {
+  .wonder-card {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px 14px;
+    max-height: calc(100vh - 65px);
+  }
+  .wonder-hero-icon-wrap {
+    width: 52px;
+    height: 52px;
+  }
+  .wonder-stadium-icon {
+    font-size: 2.2rem;
+  }
+  .wonder-title {
+    font-size: 1.35rem;
+  }
+  .wonder-col-left {
+    gap: 4px;
+  }
+  .wonder-col-right {
+    gap: 8px;
+  }
+}

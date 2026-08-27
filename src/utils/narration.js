@@ -1,76 +1,138 @@
 // src/utils/narration.js
-//
-// Semantic helper functions wrap narration text with an ElevenLabs
-// "style" tag. Every string here MUST exactly match the on-screen
-// text shown in UI components (1:1 parity) and the `phrases` array
-// in scripts/generate_audio.js, so audioMap.js lookups succeed.
+// Narration script builder for MassQuest
+// Strictly matches on-screen text 1:1 as per audio_generation_pipeline (5).md
 
 export const say       = (text) => ({ text, style: 'statement' });
 export const ask       = (text) => ({ text, style: 'question' });
-export const cheer     = (text) => ({ text, style: 'encouragement' });
+export const cheer     = (text) => ({ text, style: 'celebration' });
+export const celebrate = (text) => ({ text, style: 'celebration' });
 export const emphasize = (text) => ({ text, style: 'emphasis' });
 export const think     = (text) => ({ text, style: 'thinking' });
-export const celebrate = (text) => ({ text, style: 'celebration' });
+export const instruct  = (text) => ({ text, style: 'instruction' });
+export const encourage = (text) => ({ text, style: 'encouragement' });
 
-export {
-  VOICE_SETTINGS,
-  VOICE_ID,
-  VOICE_MODEL,
-} from '../config/audio.config.js';
-
-// ─── WONDER ──────────────────────────────────────────────────────────────
-export function wonderHookNarration(wonderId) {
-  return ({
-    1: [cheer("Hmm, I wonder! Sophie is holding a bag of apples that feels very heavy. But how do we know exactly how heavy it is? Think about the tools we use to measure things — then click Let's Discover!")],
-    2: [cheer("Ooh, a mass mystery! Lily's recipe needs 500 grams of flour. Is that more or less than one kilogram? Think carefully — then let's find out together!")],
-    3: [cheer("Great thinking challenge! A watermelon weighs 3 kilograms and a mango weighs 400 grams. Which one is heavier? Can you figure it out before we start?")],
-    4: [cheer("What a tricky one! Oliver has two boxes with different masses. Can you work out which box is heavier — and by how much? Think it through, then let's discover!")],
-  })[wonderId] ?? [];
+export function wonderNarration() {
+  return [
+    cheer("Welcome to MassQuest! Let's investigate the big mass mystery!"),
+    say("Sophie is holding a bag of apples that feels really heavy, while Max has a feather and a 500-gram box."),
+    ask("How do we know which is heavier, and how many grams equal one kilogram?"),
+    cheer("Let's investigate how balance scales and measuring mass work!"),
+  ];
 }
 
-// ─── STORY ───────────────────────────────────────────────────────────────
-export const storyNarrations = {
-  mass: [
-    say("Welcome to Market Day! Sophie and Max visit the market where Max uses a balance scale to weigh strawberries. A balance scale compares masses — the heavier side always goes down!"),
-    say("When we weigh small things like sweets, spices, or a pencil, we use grams! The letter g stands for grams. Small objects have a small mass — so we measure them in grams!"),
-    say("When things are heavier — like bags of flour or boxes of fruit — we use kilograms! The letters k g stand for kilograms. One kilogram is much heavier than one gram!"),
-    emphasize("Here is the most important fact to remember: one kilogram equals one thousand grams! So 1 kg equals 1000 g. And 500 grams is half a kilogram. Write this down — it is your superpower!"),
-    celebrate("Amazing work! You have learned four powerful ideas. We compare masses using a balance scale. Small things are measured in grams. Heavy things are measured in kilograms. And one kilogram equals one thousand grams. You are a Mass Master — let's play!"),
-  ],
-};
+export function storyNarration(panel) {
+  const scripts = [
+    [
+      say("It is a sunny morning at the bustling town market! Sophie runs over to Max's fruit stall."),
+      say("Max has an antique balance scale on his counter."),
+      say("When he places a big basket of fresh strawberries on one pan, it clunks down while the other side goes up!"),
+      cheer("Sophie learns the golden rule: the heavier side always sinks down!"),
+    ],
+    [
+      say("A customer asks Max for sweet berries, spices, and cinnamon."),
+      say("Max brings out his precision scale and says: These items are small and light, so we measure them in grams!"),
+      say("A single grape is about 5 grams, and a wooden pencil is about 20 grams."),
+      cheer("When objects are light, grams are our best friend!"),
+    ],
+    [
+      say("Lily the baker arrives with a huge shopping cart to buy flour and sugar for the bakery."),
+      say("She lifts a giant bag onto the heavy-duty scale."),
+      say("We don't count thousands of tiny grams for giant bags, smiles Lily. We use kilograms!"),
+      cheer("One kilogram is written as 1 kg, and is used for heavy things."),
+    ],
+    [
+      say("In the science lab, Oliver shows the class a magic math fact: exactly 1000 tiny 1-gram weights balance one 1-kilogram metal block!"),
+      say("That means 1 kilogram equals 1000 grams, and 500 grams is exactly half a kilogram!"),
+      cheer("Sophie shouts with joy — she is now officially a certified Mass Master!"),
+    ],
+  ];
 
-// ─── SIMULATE ────────────────────────────────────────────────────────────
-const SIMULATION_NARRATIONS = [
-  [say("Station one — the Balance Scale! Look at the two objects. Think about which one is heavier. The balance scale will tip toward the heavier side. Let's go!")],
-  [say("Station two — Mass Reader! Look at the dial on the scale. The needle is pointing to a number. Can you read the mass and pick the right answer? Read carefully!")],
-  [say("Final station — Unit Converter! You will see a mass in grams or kilograms with one blank. Use what you know about 1 kg equals 1000 g to fill it in. You've got this!")],
-];
-
-export function simulationStationNarration(stationIndex) {
-  return SIMULATION_NARRATIONS[stationIndex] ?? [];
+  return scripts[panel] || scripts[0];
 }
 
-// ─── PLAY ─────────────────────────────────────────────────────────────────
-export const CORRECT_NARRATIONS = [
-  cheer("Excellent! You've got it!"),
-  cheer("Brilliant! Keep going!"),
-  cheer("That's exactly right! Well done!"),
-];
+export function simStationIntro(stationIdx) {
+  const intros = [
+    [
+      instruct("Welcome to Station A — Interactive Pan Balance Lab!"),
+      instruct("Place brass weights on the scale pan to balance the grocery items until the beam is completely level!"),
+    ],
+    [
+      instruct("Welcome to Station B — Market Dial and Scale Reader!"),
+      instruct("Read the dial graduations carefully and weigh grocery bags to calculate exact recipe totals!"),
+    ],
+    [
+      instruct("Welcome to Station C — The Grams to Kilograms Converter Machine!"),
+      instruct("Convert between grams and kilograms, pack 1000-gram bags, and solve conversion puzzles!"),
+    ],
+    [
+      instruct("Welcome to Station D — Chef Lily's Recipe Mass Inspector!"),
+      instruct("Inspect recipe ingredients, spot incorrect masses, and balance the baker's workbench to perfection!"),
+    ],
+  ];
 
-export const WRONG_NARRATIONS = [
-  think("Not quite, but good try! Remember: 1 kilogram equals 1000 grams."),
-  think("Almost! Check the units carefully and try again."),
-];
+  return intros[stationIdx] || intros[0];
+}
 
-export function bossBattleNarration() {
-  return [emphasize("The Boss Battle begins! Answer five questions correctly to defeat the Scale Boss and claim your Mass Master trophy!")];
+export function playQuestionNarration(questionText) {
+  return [
+    ask(questionText)
+  ];
+}
+
+export function playCorrectNarration(streak = 1) {
+  if (streak >= 5) {
+    return [cheer("Incredible streak! You are unstoppable! 🔥")];
+  }
+  if (streak >= 3) {
+    return [cheer("Awesome! Three in a row! ⭐")];
+  }
+  return [cheer("Spot on! That's correct! 🎉")];
+}
+
+export function playWrongNarration() {
+  return [
+    think("Not quite — check the hint, look at the units carefully, and try again! 💡")
+  ];
+}
+
+export function playHint1Narration() {
+  return [
+    encourage("Here's your first hint! Look at whether the units are in grams or kilograms.")
+  ];
+}
+
+export function playHint2Narration() {
+  return [
+    encourage("Here's your final clue! Remember that 1 kilogram equals 1000 grams.")
+  ];
+}
+
+export function districtCompleteNarration() {
+  return [
+    cheer("World Complete! Spectacular job on this mass world! 🌟")
+  ];
+}
+
+export function bossStartNarration() {
+  return [
+    emphasize("The Boss Battle begins! Answer correctly to defeat the boss and claim your badge!")
+  ];
 }
 
 export function bossWinNarration() {
-  return [celebrate("You defeated the Scale Boss! The Golden Weighing Trophy is yours!")];
+  return [
+    cheer("Victory! You defeated the boss and claimed the World Badge! 👑")
+  ];
 }
 
-// ─── INTRO ────────────────────────────────────────────────────────────────
-export function introNarration() {
-  return [cheer("Let's explore grams and kilograms!")];
+export function reflectNarration() {
+  return [
+    say("Welcome to the Reflect Phase! Let's review the key mass concepts and check your scorecard! 📓")
+  ];
+}
+
+export function reflectCompleteNarration() {
+  return [
+    cheer("Outstanding! You have mastered grams, kilograms, and balance scales! You are a true Mass Master! 🏆")
+  ];
 }

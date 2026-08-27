@@ -1,0 +1,49 @@
+/* src/components/shared/Mascot.css */
+.mascot-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+}
+
+.mascot-avatar {
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  border: 2px solid rgba(255, 179, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.mascot-wrap.size-sm .mascot-avatar {
+  width: 42px;
+  height: 42px;
+  font-size: 1.4rem;
+}
+
+.mascot-wrap.size-md .mascot-avatar {
+  width: 52px;
+  height: 52px;
+  font-size: 1.8rem;
+}
+
+.mascot-bubble {
+  background: rgba(30, 24, 75, 0.88);
+  border: 1.5px solid rgba(130, 110, 210, 0.35);
+  border-radius: 16px;
+  padding: 10px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  text-align: left;
+}
+
+.mascot-text {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: clamp(0.92rem, 1.1vw, 1.05rem);
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.35;
+}

@@ -1,199 +1,179 @@
 // scripts/generate_audio.js
-//
-// Pre-generates all known narration phrases as .mp3 files into
-// public/assets/audio/ and writes src/utils/audioMap.js.
-//
-// Usage: npm run generate-audio
-// Requires: VITE_ELEVENLABS_API_KEY in .env.local
+// Offline pre-generation script for ElevenLabs narration audio files in MassQuest.
+// Strictly follows audio_generation_pipeline (5).md specifications.
 
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// ── Load .env.local ────────────────────────────────────────────────────────
+// Helper to read environment variables without external dependencies
 function loadEnv() {
-  const envPath = path.join(__dirname, '..', '.env.local');
-  if (!fs.existsSync(envPath)) return;
-  const lines = fs.readFileSync(envPath, 'utf-8').split('\n');
-  for (const line of lines) {
-    const [key, ...vals] = line.split('=');
-    if (key && !process.env[key.trim()]) {
-      process.env[key.trim()] = vals.join('=').trim();
+  const envFiles = ['.env.local', '.env'];
+  for (const file of envFiles) {
+    if (fs.existsSync(file)) {
+      const content = fs.readFileSync(file, 'utf-8');
+      for (const line of content.split('\n')) {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
+          const [key, ...rest] = trimmed.split('=');
+          const val = rest.join('=').replace(/^["']|["']$/g, '').trim();
+          if (!process.env[key.trim()]) {
+            process.env[key.trim()] = val;
+          }
+        }
+      }
     }
   }
 }
+
 loadEnv();
 
-const API_KEY = process.env.VITE_ELEVENLABS_API_KEY;
-if (!API_KEY) {
-  console.error('❌  VITE_ELEVENLABS_API_KEY not set in .env.local');
+const apiKey = process.env.VITE_ELEVENLABS_API_KEY || process.env.ELEVENLABS_API_KEY;
+if (!apiKey) {
+  console.error("\n❌ Error: VITE_ELEVENLABS_API_KEY is not defined in .env.local or .env.");
+  console.log("Please create a .env.local file with: VITE_ELEVENLABS_API_KEY=your_key_here\n");
   process.exit(1);
 }
 
-const VOICE_ID = 'Xb7hH8MSUJpSbSDYk0k2';
+const VOICE_ID = 'Xb7hH8MSUJpSbSDYk0k2'; // Alice — Clear, Engaging Educator
 const VOICE_MODEL = 'eleven_multilingual_v2';
-const AUDIO_DIR = path.join(__dirname, '..', 'public', 'assets', 'audio');
-const MAP_PATH  = path.join(__dirname, '..', 'src', 'utils', 'audioMap.js');
 
 const VOICE_SETTINGS = {
-  statement:     { stability: 0.65, similarity_boost: 0.80, style: 0.30 },
-  question:      { stability: 0.55, similarity_boost: 0.75, style: 0.50 },
-  encouragement: { stability: 0.50, similarity_boost: 0.85, style: 0.60 },
-  emphasis:      { stability: 0.75, similarity_boost: 0.90, style: 0.20 },
-  thinking:      { stability: 0.70, similarity_boost: 0.78, style: 0.40 },
-  celebration:   { stability: 0.45, similarity_boost: 0.85, style: 0.80 },
+  statement:     { stability: 0.65, similarity_boost: 0.80, style: 0.30, use_speaker_boost: true },
+  instruction:   { stability: 0.65, similarity_boost: 0.80, style: 0.30, use_speaker_boost: true },
+  question:      { stability: 0.55, similarity_boost: 0.75, style: 0.50, use_speaker_boost: true },
+  encouragement: { stability: 0.50, similarity_boost: 0.85, style: 0.60, use_speaker_boost: true },
+  emphasis:      { stability: 0.75, similarity_boost: 0.90, style: 0.20, use_speaker_boost: true },
+  thinking:      { stability: 0.70, similarity_boost: 0.78, style: 0.40, use_speaker_boost: true },
+  celebration:   { stability: 0.45, similarity_boost: 0.85, style: 0.80, use_speaker_boost: true },
 };
 
-// ── Phrases to pre-generate ────────────────────────────────────────────────
 const phrases = [
-  // WONDER
-  { text: "Hmm, I wonder! Sophie is holding a bag of apples that feels very heavy. But how do we know exactly how heavy it is? Think about the tools we use to measure things — then click Let's Discover!", style: 'encouragement' },
-  { text: "Ooh, a mass mystery! Lily's recipe needs 500 grams of flour. Is that more or less than one kilogram? Think carefully — then let's find out together!", style: 'encouragement' },
-  { text: "Great thinking challenge! A watermelon weighs 3 kilograms and a mango weighs 400 grams. Which one is heavier? Can you figure it out before we start?", style: 'encouragement' },
-  { text: "What a tricky one! Oliver has two boxes with different masses. Can you work out which box is heavier — and by how much? Think it through, then let's discover!", style: 'encouragement' },
-  // STORY
-  { text: "It's a bright sunny morning at the market! Sophie runs over to Max's stall and spots something exciting — a balance scale! Max smiles and says: Watch this, Sophie! He puts a pile of strawberries on one side and a metal weight on the other. CLUNK — the strawberry side goes all the way down! Sophie gasps. The heavier side always sinks! says Max. That's how we compare masses — the heavier side goes DOWN, and the lighter side goes UP!", style: 'statement' },
-  { text: "A customer asks Max for some sweets and spices. Max reaches for his small measuring scale and says: These are small and light — so I'll measure them in GRAMS! Sophie asks: What's a gram? Max explains: A single grape weighs about 5 grams. A pencil weighs about 20 grams. A sweet weighs about 3 grams. Anything small and light, we measure in grams — and we write it with just the letter G. Sophie tries holding a sweet in her palm. It barely weighs anything at all. So light things get measured in grams! she says. Exactly right, Sophie!", style: 'statement' },
-  { text: "Here comes Lily the baker! She heaves a huge bag of flour onto the counter and says: Two kilograms of flour, please! Sophie is confused and asks: Why not just say 2000 grams? Max laughs and explains: Because kilograms are so much easier for heavy things! One kilogram IS one thousand grams — but saying two kilograms is so much simpler. We write it K-G. Sophie lifts the bag — it's really heavy! So heavy things get measured in kilograms — K-G! she says. Perfect, Sophie, you've got it!", style: 'statement' },
-  { text: "Back in school, Oliver the science teacher holds up a single kilogram weight. Now watch very carefully, he says with a big smile. He starts placing tiny one-gram weights on the other side of the scale — ten, fifty, one hundred, five hundred — all the way to one thousand! When he places the very last one, the scale balances PERFECTLY. The class gasps! One kilogram equals exactly one thousand grams! says Oliver. And five hundred grams is half a kilogram! Sophie quickly writes it down. This is my superpower! she says. Remember it forever — one kilogram equals one thousand grams!", style: 'emphasis' },
-  { text: "The Market Day weighing competition begins! The judge shows Sophie different objects. She uses a balance scale to compare which is heavier. She measures small things like grapes and spices in GRAMS. She measures heavy bags of flour and rice in KILOGRAMS. And when the judge asks how many grams are in a kilogram, Sophie shouts: ONE THOUSAND! The crowd cheers and Sophie holds up her golden trophy! Max, Lily, and Oliver all clap and cheer! You've done it too — YOU are a Mass Master! Now let's go and play!", style: 'celebration' },
-  // SIMULATE
-  { text: "Station one — the Balance Scale! Look at the two objects. Think about which one is heavier. The balance scale will tip toward the heavier side. Let's go!", style: 'statement' },
-  { text: "Station two — Mass Reader! Look at the dial on the scale. The needle is pointing to a number. Can you read the mass and pick the right answer? Read carefully!", style: 'statement' },
-  { text: "Final station — Unit Converter! You will see a mass in grams or kilograms with one blank. Use what you know about 1 kg equals 1000 g to fill it in. You've got this!", style: 'statement' },
-  // PLAY
-  { text: "Excellent! You've got it!", style: 'celebration' },
-  { text: "Brilliant! Keep going!", style: 'encouragement' },
-  { text: "That's exactly right! Well done!", style: 'celebration' },
-  { text: "Not quite, but good try! Remember: 1 kilogram equals 1000 grams.", style: 'thinking' },
-  { text: "Almost! Check the units carefully and try again.", style: 'thinking' },
-  { text: "The Boss Battle begins! Answer five questions correctly to defeat the Scale Boss and claim your Mass Master trophy!", style: 'emphasis' },
-  { text: "You defeated the Scale Boss! The Golden Weighing Trophy is yours!", style: 'celebration' },
+  // ─── INTRO ────────────────────────────────────────────────────────────────
+  { text: "Welcome to MassQuest! Let's investigate the big mass mystery!", style: 'celebration' },
+
+  // ─── WONDER PHASE ────────────────────────────────────────────────────────
+  { text: "Sophie is holding a bag of apples that feels really heavy, while Max has a feather and a 500-gram box.", style: 'statement' },
+  { text: "How do we know which is heavier, and how many grams equal one kilogram?", style: 'question' },
+  { text: "Let's investigate how balance scales and measuring mass work!", style: 'celebration' },
+
+  // ─── STORY PHASE: PANEL 0 ────────────────────────────────────────────────
+  { text: "It is a sunny morning at the bustling town market! Sophie runs over to Max's fruit stall.", style: 'statement' },
+  { text: "Max has an antique balance scale on his counter.", style: 'statement' },
+  { text: "When he places a big basket of fresh strawberries on one pan, it clunks down while the other side goes up!", style: 'statement' },
+  { text: "Sophie learns the golden rule: the heavier side always sinks down!", style: 'celebration' },
+
+  // ─── STORY PHASE: PANEL 1 ────────────────────────────────────────────────
+  { text: "A customer asks Max for sweet berries, spices, and cinnamon.", style: 'statement' },
+  { text: "Max brings out his precision scale and says: These items are small and light, so we measure them in grams!", style: 'statement' },
+  { text: "A single grape is about 5 grams, and a wooden pencil is about 20 grams.", style: 'statement' },
+  { text: "When objects are light, grams are our best friend!", style: 'celebration' },
+
+  // ─── STORY PHASE: PANEL 2 ────────────────────────────────────────────────
+  { text: "Lily the baker arrives with a huge shopping cart to buy flour and sugar for the bakery.", style: 'statement' },
+  { text: "She lifts a giant bag onto the heavy-duty scale.", style: 'statement' },
+  { text: "We don't count thousands of tiny grams for giant bags, smiles Lily. We use kilograms!", style: 'statement' },
+  { text: "One kilogram is written as 1 kg, and is used for heavy things.", style: 'celebration' },
+
+  // ─── STORY PHASE: PANEL 3 ────────────────────────────────────────────────
+  { text: "In the science lab, Oliver shows the class a magic math fact: exactly 1000 tiny 1-gram weights balance one 1-kilogram metal block!", style: 'statement' },
+  { text: "That means 1 kilogram equals 1000 grams, and 500 grams is exactly half a kilogram!", style: 'statement' },
+  { text: "Sophie shouts with joy — she is now officially a certified Mass Master!", style: 'celebration' },
+
+  // ─── SIMULATE STATION INTROS ─────────────────────────────────────────────
+  { text: "Welcome to Station A — Interactive Pan Balance Lab!", style: 'instruction' },
+  { text: "Place brass weights on the scale pan to balance the grocery items until the beam is completely level!", style: 'instruction' },
+  { text: "Welcome to Station B — Market Dial and Scale Reader!", style: 'instruction' },
+  { text: "Read the dial graduations carefully and weigh grocery bags to calculate exact recipe totals!", style: 'instruction' },
+  { text: "Welcome to Station C — The Grams to Kilograms Converter Machine!", style: 'instruction' },
+  { text: "Convert between grams and kilograms, pack 1000-gram bags, and solve conversion puzzles!", style: 'instruction' },
+  { text: "Welcome to Station D — Chef Lily's Recipe Mass Inspector!", style: 'instruction' },
+  { text: "Inspect recipe ingredients, spot incorrect masses, and balance the baker's workbench to perfection!", style: 'instruction' },
+
+  // ─── FEEDBACK & HINTS ────────────────────────────────────────────────────
+  { text: "Spot on! That's correct! 🎉", style: 'celebration' },
+  { text: "Awesome! Three in a row! ⭐", style: 'celebration' },
+  { text: "Incredible streak! You are unstoppable! 🔥", style: 'celebration' },
+  { text: "Not quite — check the hint, look at the units carefully, and try again! 💡", style: 'thinking' },
+  { text: "Here's your first hint! Look at whether the units are in grams or kilograms.", style: 'encouragement' },
+  { text: "Here's your final clue! Remember that 1 kilogram equals 1000 grams.", style: 'encouragement' },
+
+  // ─── DISTRICT & BOSS BATTLES ─────────────────────────────────────────────
+  { text: "World Complete! Spectacular job on this mass world! 🌟", style: 'celebration' },
+  { text: "The Boss Battle begins! Answer correctly to defeat the boss and claim your badge!", style: 'emphasis' },
+  { text: "Victory! You defeated the boss and claimed the World Badge! 👑", style: 'celebration' },
+
+  // ─── REFLECT PHASE ───────────────────────────────────────────────────────
+  { text: "Welcome to the Reflect Phase! Let's review the key mass concepts and check your scorecard! 📓", style: 'statement' },
+  { text: "Outstanding! You have mastered grams, kilograms, and balance scales! You are a true Mass Master! 🏆", style: 'celebration' },
 ];
 
-// ── Helpers ───────────────────────────────────────────────────────────────
-function slugify(text) {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9 ]/g, '')
-    .trim()
-    .replace(/\s+/g, '_')
-    .slice(0, 55);
+const outputDir = './public/assets/audio';
+if (!fs.existsSync(outputDir)) {
+  fs.mkdirSync(outputDir, { recursive: true });
 }
 
-// ── CLI args ──────────────────────────────────────────────────────────────
-// node scripts/generate_audio.js --index 4
-// node scripts/generate_audio.js --text "Hello there!" --style celebration
-// node scripts/generate_audio.js --list                (show all phrases + indices)
-function parseArgs() {
-  const args = process.argv.slice(2);
-  const out = {};
-  for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--index') out.index = parseInt(args[++i], 10);
-    if (args[i] === '--text') out.text = args[++i];
-    if (args[i] === '--style') out.style = args[++i];
-    if (args[i] === '--list') out.list = true;
-  }
-  return out;
+function cleanString(str) {
+  return str.toLowerCase().replace(/[^a-z0-9]/g, '_').substring(0, 45).replace(/_+/g, '_').replace(/^_|_$/g, '');
 }
 
-async function generateAudio(text, style) {
-  const settings = VOICE_SETTINGS[style] ?? VOICE_SETTINGS.statement;
-  const res = await fetch(
-    `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'xi-api-key': API_KEY },
-      body: JSON.stringify({ text, model_id: VOICE_MODEL, voice_settings: settings }),
-    }
-  );
-  if (!res.ok) throw new Error(`ElevenLabs error ${res.status}: ${await res.text()}`);
-  const buf = await res.arrayBuffer();
-  return Buffer.from(buf);
-}
+async function main() {
+  console.log(`\n🎙️ Starting ElevenLabs Audio Generation Pipeline for MassQuest`);
+  console.log(`Voice ID: ${VOICE_ID} | Model: ${VOICE_MODEL}`);
+  console.log(`Total phrases to process: ${phrases.length}\n`);
 
-// ── Main ──────────────────────────────────────────────────────────────────
-(async () => {
-  fs.mkdirSync(AUDIO_DIR, { recursive: true });
-  const { index, text: cliText, style: cliStyle, list } = parseArgs();
-
-  // --list: just print every phrase with its index, then exit
-  if (list) {
-    phrases.forEach((p, i) => console.log(`[${i}] (${p.style}) ${p.text.slice(0, 70)}…`));
-    return;
-  }
-
-  // --text "...": generate one ad-hoc phrase, save it standalone, skip the map
-  if (cliText) {
-    const style = cliStyle || 'statement';
-    const filename = `audio_${slugify(cliText)}.mp3`;
-    const filePath = path.join(AUDIO_DIR, filename);
-    console.log(`🎙  Generating single statement (${style}): "${cliText.slice(0, 60)}…"`);
-    const buf = await generateAudio(cliText, style);
-    fs.writeFileSync(filePath, buf);
-    console.log(`✅  Saved: public/assets/audio/${filename}`);
-    return;
-  }
-
-  // --index N: generate just one phrase from the existing list, update its map entry only
-  if (Number.isInteger(index)) {
-    const phrase = phrases[index];
-    if (!phrase) {
-      console.error(`❌  No phrase at index ${index}. Run with --list to see valid indices.`);
-      return;
-    }
-    const filename = `audio_${slugify(phrase.text)}_${index}.mp3`;
-    const filePath = path.join(AUDIO_DIR, filename);
-    console.log(`🎙  Generating [${index}] ${phrase.style}: "${phrase.text.slice(0, 60)}…"`);
-    const buf = await generateAudio(phrase.text, phrase.style);
-    fs.writeFileSync(filePath, buf);
-    console.log(`✅  Saved: public/assets/audio/${filename}`);
-    console.log(`ℹ️   This single run does NOT rewrite audioMap.js — run without flags to regenerate the full map.`);
-    return;
-  }
-
-  // No flags: full batch generation (original behaviour)
-  const audioMapEntries = [];
-  let generated = 0;
+  const mapping = {};
 
   for (let i = 0; i < phrases.length; i++) {
     const { text, style } = phrases[i];
-    const filename = `audio_${slugify(text)}_${i}.mp3`;
-    const filePath = path.join(AUDIO_DIR, filename);
-    const assetPath = `assets/audio/${filename}`;
+    const cleanText = cleanString(text);
+    const fileName = `audio_${cleanText}_${i}.mp3`;
+    const destPath = path.join(outputDir, fileName);
 
-    audioMapEntries.push([text, assetPath]);
+    const relativeWebPath = `/assets/audio/${fileName}`;
+    mapping[text] = relativeWebPath;
 
-    if (fs.existsSync(filePath)) {
-      console.log(`⏭  Skipping (exists): ${filename}`);
+    if (fs.existsSync(destPath)) {
+      console.log(`[${i + 1}/${phrases.length}] ⏩ Skipped (already exists): ${fileName}`);
       continue;
     }
 
+    console.log(`[${i + 1}/${phrases.length}] 🔊 Generating: "${text.substring(0, 40)}..." -> ${fileName}`);
+
+    const settings = VOICE_SETTINGS[style] || VOICE_SETTINGS.statement;
+
     try {
-      process.stdout.write(`🎙  Generating [${i + 1}/${phrases.length}] ${style}: "${text.slice(0, 48)}…" `);
-      const buf = await generateAudio(text, style);
-      fs.writeFileSync(filePath, buf);
-      console.log(`✓ ${filename}`);
-      generated++;
-      // Rate limit: wait 400 ms between requests
-      await new Promise((r) => setTimeout(r, 400));
-    } catch (err) {
-      console.error(`\n❌  Failed: ${err.message}`);
+      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
+        method: 'POST',
+        headers: {
+          'xi-api-key': apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text,
+          model_id: VOICE_MODEL,
+          voice_settings: settings,
+        }),
+      });
+
+      if (!response.ok) {
+        const errBody = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errBody}`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      fs.writeFileSync(destPath, buffer);
+      console.log(`   ✅ Saved: ${destPath}`);
+    } catch (e) {
+      console.error(`   ❌ Failed to generate phrase "${text}":`, e.message);
     }
   }
 
-  // Write audioMap.js
-  const mapContent = `// src/utils/audioMap.js
-// AUTO-GENERATED by scripts/generate_audio.js — do not edit by hand.
-// Run \`npm run generate-audio\` to regenerate.
+  // Write mapping to src/utils/audioMap.js
+  const mapContent = `// Auto-generated by generate_audio.js\n// Static asset mapping for offline generated narration phrases in MassQuest\n\nexport const audioMap = ${JSON.stringify(mapping, null, 2)};\n\nexport default audioMap;\n`;
+  fs.writeFileSync('./src/utils/audioMap.js', mapContent);
+  console.log("\n✨ Audio mapping updated in src/utils/audioMap.js!");
+  console.log("🎉 Audio generation completed successfully!\n");
+}
 
-export const audioMap = {
-${audioMapEntries.map(([text, path]) => `  ${JSON.stringify(text)}: ${JSON.stringify(path)},`).join('\n')}
-};
-`;
-  fs.writeFileSync(MAP_PATH, mapContent);
-
-  console.log(`\n✅  Done. Generated ${generated} new files. audioMap.js updated (${audioMapEntries.length} entries).`);
-})();
+main().catch(console.error);

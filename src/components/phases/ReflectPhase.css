@@ -1,0 +1,229 @@
+/* src/components/phases/ReflectPhase.css */
+.reflect-wrap {
+  flex: 1;
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 8px 16px 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.reflect-card {
+  width: 100%;
+  padding: clamp(14px, 2vh, 22px) clamp(16px, 2.5vw, 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.reflect-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.reflect-badge {
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.82rem;
+  padding: 4px 14px;
+  border-radius: var(--radius-pill);
+}
+
+.reflect-title {
+  color: var(--gold);
+  margin: 0;
+}
+
+.reflect-quiz-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  padding: 12px 16px;
+}
+
+.reflect-q-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reflect-q-text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.96rem;
+  color: #ffffff;
+  margin: 0;
+}
+
+.reflect-opt-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reflect-journal {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.reflect-label {
+  color: var(--gold-light);
+  font-weight: 800;
+}
+
+.reflect-textarea {
+  width: 100%;
+  background: rgba(10, 8, 30, 0.75);
+  border: 1.5px solid rgba(130, 110, 210, 0.35);
+  border-radius: 12px;
+  padding: 8px 12px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  resize: none;
+  box-sizing: border-box;
+}
+
+.reflect-textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.quick-insert-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.quick-insert-btn:hover {
+  background: rgba(255, 179, 0, 0.2);
+  border-color: var(--gold);
+  color: #ffffff;
+}
+
+.reflect-stats {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.reflect-stat-pill {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.88rem;
+  color: #ffffff;
+}
+
+.reflect-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+/* ─── Trophy Card ───────────────────────────────────────────────────────── */
+.trophy-card {
+  width: 100%;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.trophy-icon {
+  font-size: 3.5rem;
+}
+
+.trophy-title {
+  color: var(--gold);
+  margin: 0;
+}
+
+.trophy-sub {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.trophy-stats {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.trophy-stat {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  padding: 10px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.trophy-stars {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 500px;
+}
+
+.trophy-badges {
+  width: 100%;
+  max-width: 600px;
+}
+
+.badge-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.badge-pill {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.trophy-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
