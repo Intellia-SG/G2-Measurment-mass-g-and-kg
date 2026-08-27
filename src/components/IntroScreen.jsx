@@ -2,6 +2,7 @@
 import React from 'react';
 import './IntroScreen.css';
 import { generateSessionQuestions } from '../utils/shuffle.js';
+import { useAudio } from '../hooks/useAudio.js';
 import questionBank from '../data/questionBank.js';
 
 const JOURNEY = [
@@ -13,15 +14,23 @@ const JOURNEY = [
 ];
 
 export default function IntroScreen({ state, dispatch }) {
+  const { sounds } = useAudio(state?.audioEnabled ?? true);
   const hasSaved = state?.phaseComplete && Object.values(state.phaseComplete).some(Boolean);
 
   function startFresh() {
+    sounds.click();
     dispatch({ type: 'LOAD_QUESTIONS', payload: generateSessionQuestions(questionBank) });
     dispatch({ type: 'SET_PHASE', payload: 'wonder' });
   }
 
   function resumeSession() {
+    sounds.click();
     dispatch({ type: 'SET_PHASE', payload: state.savedPhase || 'wonder' });
+  }
+
+  function selectPhase(label) {
+    sounds.click();
+    dispatch({ type: 'SET_PHASE', payload: label.toLowerCase() === 'practice' ? 'play' : label.toLowerCase() });
   }
 
   return (
@@ -60,7 +69,7 @@ export default function IntroScreen({ state, dispatch }) {
               <React.Fragment key={j.num}>
                 <div
                   className="journey-step-item clickable-step"
-                  onClick={() => dispatch({ type: 'SET_PHASE', payload: j.label.toLowerCase() === 'practice' ? 'play' : j.label.toLowerCase() })}
+                  onClick={() => selectPhase(j.label)}
                   role="button"
                   tabIndex={0}
                   title={`Click to open ${j.label} phase`}
@@ -81,7 +90,7 @@ export default function IntroScreen({ state, dispatch }) {
               <React.Fragment key={j.num}>
                 <div
                   className="journey-step-item clickable-step"
-                  onClick={() => dispatch({ type: 'SET_PHASE', payload: j.label.toLowerCase() === 'practice' ? 'play' : j.label.toLowerCase() })}
+                  onClick={() => selectPhase(j.label)}
                   role="button"
                   tabIndex={0}
                   title={`Click to open ${j.label} phase`}

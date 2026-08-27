@@ -1,5 +1,5 @@
 // src/components/phases/StoryPhase.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './StoryPhase.css';
 import { STORY_PANELS } from '../../data/storyContent.js';
 import { useAudio } from '../../hooks/useAudio.js';
@@ -38,11 +38,18 @@ export default function StoryPhase({ state, dispatch }) {
   const { narrate, stopAll } = useAudio(state?.audioEnabled ?? true);
   const totalPanels = STORY_PANELS.length;
   const isLastPanel = (state?.storyPanel || 0) >= totalPanels - 1;
+  const prevPanelRef = useRef(-1);
 
   useEffect(() => {
-    stopAll();
-    const timer = setTimeout(() => narrate(storyNarration(state?.storyPanel || 0)), 300);
-    return () => { clearTimeout(timer); stopAll(); };
+    const currentPanel = state?.storyPanel || 0;
+    if (prevPanelRef.current !== currentPanel) {
+      prevPanelRef.current = currentPanel;
+      stopAll();
+      const timer = setTimeout(() => {
+        narrate(storyNarration(currentPanel));
+      }, 250);
+      return () => clearTimeout(timer);
+    }
   }, [state?.storyPanel, narrate, stopAll]);
 
   function handleNext() {

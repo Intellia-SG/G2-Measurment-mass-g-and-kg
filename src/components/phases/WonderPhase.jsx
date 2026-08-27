@@ -1,5 +1,5 @@
 // src/components/phases/WonderPhase.jsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import './WonderPhase.css';
 import Mascot from '../shared/Mascot.jsx';
 import { useAudio } from '../../hooks/useAudio.js';
@@ -9,11 +9,19 @@ const PARTICLES = ['⚖️', '1 kg', '1000 g', '500 g', '250 g', '🍎', '🏋�
 
 export default function WonderPhase({ state, dispatch }) {
   const { narrate, stopAll } = useAudio(state?.audioEnabled ?? true);
+  const started = useRef(false);
 
   useEffect(() => {
-    const segs = wonderNarration();
-    narrate(segs);
-    return () => stopAll();
+    if (!started.current) {
+      started.current = true;
+      const timer = setTimeout(() => {
+        narrate(wonderNarration());
+      }, 200);
+      return () => {
+        clearTimeout(timer);
+        stopAll();
+      };
+    }
   }, [narrate, stopAll]);
 
   function handleInvestigate() {

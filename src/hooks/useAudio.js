@@ -1,40 +1,38 @@
 // src/hooks/useAudio.js
 // Audio Engine supporting static asset lookup, ElevenLabs dynamic fallback, and Web Audio SFX
-// Follows audio_generation_pipeline (5).md strictly.
+// Strictly follows audio_generation_pipeline (5).md.
 
 import { useRef, useCallback, useEffect } from 'react';
 import { audioMap } from '../utils/audioMap.js';
 import { VOICE_ID, VOICE_MODEL, VOICE_SETTINGS } from '../config/audio.config.js';
 
 const blobCache = new Map();
-const BASE_URL = import.meta.env.BASE_URL || '/';
+let globalAudio = null;
+let globalNarrateId = 0;
 
 export function useAudio(audioEnabled = true) {
-  const currentAudioRef = useRef(null);
-  const playingRef      = useRef(false);
-  const narrateIdRef    = useRef(0);
+  const audioEnabledRef = useRef(audioEnabled);
+  audioEnabledRef.current = audioEnabled;
 
   useEffect(() => {
     if (!audioEnabled) {
-      narrateIdRef.current++;
       stopAll();
     }
   }, [audioEnabled]);
 
   const stopAll = useCallback(() => {
-    narrateIdRef.current++;
-    if (currentAudioRef.current) {
-      currentAudioRef.current.pause();
-      currentAudioRef.current = null;
+    globalNarrateId++;
+    if (globalAudio) {
+      globalAudio.pause();
+      globalAudio.currentTime = 0;
+      globalAudio = null;
     }
-    playingRef.current = false;
   }, []);
 
   const getAudioUrl = useCallback(async (text, style = 'statement') => {
-    // 1. Check static pre-generated audioMap first
+    // 1. Check static pre-generated audioMap first (exact text match)
     if (audioMap && audioMap[text]) {
-      const p = audioMap[text];
-      return p.startsWith('http') ? p : `${BASE_URL}${p.replace(/^\//, '')}`;
+      return audioMap[text];
     }
 
     // 2. Memory cache check
@@ -64,33 +62,54 @@ export function useAudio(audioEnabled = true) {
       const url  = URL.createObjectURL(blob);
       blobCache.set(cacheKey, url);
       return url;
-    } catch (err) {
+    } catch {
       return null;
     }
   }, []);
 
   const playSegment = useCallback(async (text, style, expectedId) => {
-    if (!audioEnabled || narrateIdRef.current !== expectedId) return;
+    if (!audioEnabledRef.current || globalNarrateId !== expectedId) return;
     const url = await getAudioUrl(text, style);
-    if (!url || narrateIdRef.current !== expectedId) return;
+    if (!url || globalNarrateId !== expectedId) return;
 
     return new Promise((resolve) => {
+      if (globalNarrateId !== expectedId) { resolve(); return; }
+
+      if (globalAudio) {
+        globalAudio.pause();
+        globalAudio = null;
+      }
+
       const audio = new Audio(url);
-      currentAudioRef.current = audio;
-      audio.onended = () => { currentAudioRef.current = null; resolve(); };
-      audio.onerror = () => { currentAudioRef.current = null; resolve(); };
-      audio.play().catch(() => resolve());
+      globalAudio = audio;
+
+      audio.onended = () => {
+        if (globalAudio === audio) globalAudio = null;
+        resolve();
+      };
+      audio.onerror = (err) => {
+        console.warn('[Audio Engine] Playback error on:', url, err);
+        if (globalAudio === audio) globalAudio = null;
+        resolve();
+      };
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn('[Audio Engine] Play blocked by browser policy:', err.message);
+          resolve();
+        });
+      }
     });
-  }, [audioEnabled, getAudioUrl]);
+  }, [getAudioUrl]);
 
   const narrate = useCallback(async (segments) => {
-    if (!segments || !segments.length) return;
+    if (!audioEnabledRef.current || !segments || !segments.length) return;
     stopAll();
-    const currentId = ++narrateIdRef.current;
-    playingRef.current = true;
+    const currentId = ++globalNarrateId;
 
     for (let i = 0; i < segments.length; i++) {
-      if (narrateIdRef.current !== currentId) break;
+      if (globalNarrateId !== currentId || !audioEnabledRef.current) break;
       const seg = segments[i];
 
       // Eagerly preload next segment
@@ -99,17 +118,14 @@ export function useAudio(audioEnabled = true) {
       }
 
       await playSegment(seg.text, seg.style, currentId);
-      if (narrateIdRef.current !== currentId) break;
+      if (globalNarrateId !== currentId || !audioEnabledRef.current) break;
       await new Promise((r) => setTimeout(r, 180));
-    }
-    if (narrateIdRef.current === currentId) {
-      playingRef.current = false;
     }
   }, [stopAll, playSegment, getAudioUrl]);
 
   // Tone-based sound synthesizer for instant zero-latency feedback
   const playTone = useCallback((frequencies, durations) => {
-    if (!audioEnabled) return;
+    if (!audioEnabledRef.current) return;
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (!AudioCtx) return;
@@ -128,7 +144,7 @@ export function useAudio(audioEnabled = true) {
         offset += (durations[i] || 150) / 1000;
       });
     } catch { /* ignore WebAudio errors */ }
-  }, [audioEnabled]);
+  }, []);
 
   const sounds = {
     correct: () => playTone([880, 1100, 1320], [100, 100, 180]),
