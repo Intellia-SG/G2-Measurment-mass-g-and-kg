@@ -30,9 +30,15 @@ export function useAudio(audioEnabled = true) {
   }, []);
 
   const getAudioUrl = useCallback(async (text, style = 'statement') => {
-    // 1. Check static pre-generated audioMap first (exact text match)
-    if (audioMap && audioMap[text]) {
-      return audioMap[text];
+    if (!text) return null;
+
+    // 1. Check static pre-generated audioMap first (ALWAYS prioritized)
+    if (audioMap) {
+      const match = audioMap[text] || audioMap[text.trim()];
+      if (match) {
+        const base = import.meta.env.BASE_URL || '/';
+        return match.startsWith('http') ? match : `${base}${match.replace(/^\//, '')}`;
+      }
     }
 
     // 2. Memory cache check
